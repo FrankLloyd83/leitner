@@ -1,5 +1,5 @@
 # Data files
-./leitner.json
+leitner.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
