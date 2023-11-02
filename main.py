@@ -1,11 +1,17 @@
 from classes.leitner import LeitnerSystem, Card
+import os
 
 # Initialize Leitner System
 leitner = LeitnerSystem()
 
 # Load cards from file
 if input("Load from file? (y/n) ").lower() == "y":
-    leitner.load_from_file("leitner.json")
+    print("Choose a file from the following list:")
+    file_list = os.listdir("data")
+    for file_name in file_list:
+        print(file_name[:-5])
+    file_to_load = input("File name: ")
+    leitner.load_from_file(f"data/{file_to_load}.json")
 
 # Display cards
 leitner.display()
@@ -45,4 +51,4 @@ else:
     print("No cards to review today.")
 
 # Save cards to file
-leitner.save_to_file("leitner.json")
+leitner.save_to_file(f"data/{file_to_load}.json")
