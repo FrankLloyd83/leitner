@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime, timedelta
 
 
@@ -49,8 +50,11 @@ class LeitnerSystem:
 
         self.boxes = {1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: []}
         self.delays = {1: 1, 2: 2, 3: 4, 4: 7, 5: 15, 6: 30, 7: 60}
+        self.cards = [card for box in self.boxes.values() for card in box]
+        self.folder = "data/"
+        self.extension = ".json"
 
-    def add_card(self, card):
+    def add_card(self, card, box=1):
         """
         Add a card to box 1.
         Args:
@@ -59,29 +63,53 @@ class LeitnerSystem:
             None
         """
 
-        self.boxes[1].append(card)
+        self.boxes[box].append(card)
+        self.cards.append(card)
 
-    def study(self):
+    def write_cards(self):
         """
-        Study the cards in box 1. Move them to the next box if they are answered correctly.
+        Loop in order to add cards to the system.
         Args:
             None
         Returns:
             None
         """
+        add_card = input("Add card? (y/n) ")
+        while add_card.lower() not in ["n", "y"]:
+            add_card = input("Add card? (y/n) ")
+        while add_card.lower() == "y":
+            question = input("Question: ")
+            answer = input("Answer: ")
+            self.add_card(Card(question, answer))
+            add_card = input("Add another card? (y/n) ")
+            while add_card.lower() not in ["n", "y"]:
+                add_card = input("Add another card? (y/n) ")
 
-        for box in self.boxes.values():
-            for card in box:
-                print(card.question)
-                user_answer = input("Your answer: ")
-                if user_answer.lower() == card.answer.lower():
-                    print("Correct!")
-                    card.box += 1
-                    if card.box > 7:
-                        card.box = 7
-                else:
-                    print("Incorrect. The correct answer is", card.answer)
-                    card.box = 1
+    def study(self, review_cards):
+        """
+        Study the cards due today.
+        Move them to the next box if they are answered correctly.
+        Reset them to box 1 if they are answered incorrectly.
+        Args:
+            review_cards: A list of Card objects.
+        Returns:
+            None
+        """
+
+        if not review_cards:
+            print("No cards to review today.")
+            return
+        for card in review_cards:
+            print(f"Box {card.box}: {card.question}")
+            user_answer = input("Your answer: ")
+            if user_answer.lower() == card.answer.lower():
+                print("Correct!")
+                card.box += 1
+                if card.box > 7:
+                    card.box = 7
+            else:
+                print("Incorrect. The correct answer is", card.answer)
+                card.box = 1
         self._update_boxes()
 
     def review_today(self):
@@ -118,8 +146,9 @@ class LeitnerSystem:
             for card in box:
                 new_boxes[card.box].append(card)
         self.boxes = new_boxes
+        self.display()
 
-    def save_to_file(self, filepath):
+    def save_to_file(self, filepath, load_option):
         """
         Save the current state of the Leitner system to a file.
         Args:
@@ -127,23 +156,66 @@ class LeitnerSystem:
         Returns:
             None
         """
+
+        # Validation des arguments d'entrée
+        if not os.path.isfile(filepath):
+            print(f"File {filepath} was not found.")
+            return
+
+        if load_option.lower() not in ["y", "n"]:
+            print("Invalid loading option. Use 'y' or 'n'.")
+            return
+
+        file_list = os.listdir("data")
+        combined_system = LeitnerSystem()
+
+        if (filepath.split("/")[-1] in file_list) & (load_option.lower() == "n"):
+            add_new_questions = input(
+                f"File {filepath} already exists. Add new questions to this file? (y/n) "
+            )
+            if add_new_questions.lower() == "n":
+                confirm = input("Overwrite current file? (y/n) ")
+                while confirm.lower() not in ["n", "y"]:
+                    confirm = input("Overwrite current file? (y/n) ")
+                if confirm.lower() == "n":
+                    return
+
+            if add_new_questions.lower() == "y":
+                existing_system = LeitnerSystem()
+                existing_system.load_from_file(load_option="n", filepath=self.file_path)
+                for card in existing_system.cards:
+                    combined_system.add_card(card)
+
+        for card in self.cards:
+            combined_system.add_card(card, box=card.box)
+
         data = {
             "boxes": {
-                box: [card.to_dict() for card in self.boxes[box]] for box in self.boxes
+                box: [card.to_dict() for card in combined_system.boxes[box]]
+                for box in combined_system.boxes
             }
         }
         with open(filepath, "w") as f:
             json.dump(data, f)
 
-    def load_from_file(self, filepath):
+    def load_from_file(self, load_option, filepath=None):
         """
         Load the current state of the Leitner system from a file.
         Args:
+            load_option: A string representing whether to load from a file or not.
             filepath: The path to the file to load from.
         Returns:
             None
         """
-        with open(filepath, "r") as f:
+        if load_option == "y":
+            print("Choose a file from the following list:")
+            for file_name in os.listdir("data"):
+                print(file_name[:-5])
+            self.file_path = self.folder + input("File name: ") + self.extension
+        if filepath:
+            self.file_path = filepath
+
+        with open(self.file_path, "r") as f:
             data = json.load(f)
         for box in data["boxes"]:
             for card_data in data["boxes"][box]:
@@ -154,6 +226,7 @@ class LeitnerSystem:
                 )
                 card.box = card_data["box"]
                 self.boxes[int(box)].append(card)
+                self.cards.append(card)
 
     def display(self):
         """
@@ -167,3 +240,9 @@ class LeitnerSystem:
             print(f"Box {box}:")
             for card in self.boxes[box]:
                 print(f"\t{card.question}")
+
+    def ask_for_loading(self):
+        load_option = input("Load from file? (y/n) ")
+        while load_option.lower() not in ["n", "y"]:
+            load_option = input("Load from file? (y/n) ")
+        return load_option
