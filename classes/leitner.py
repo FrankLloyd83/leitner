@@ -153,14 +153,10 @@ class LeitnerSystem:
         Save the current state of the Leitner system to a file.
         Args:
             filepath: The path to the file to save to.
+            load_option: A string representing whether to load from a file or not.
         Returns:
             None
         """
-
-        # Validation des arguments d'entrée
-        if not os.path.isfile(filepath):
-            print(f"File {filepath} was not found.")
-            return
 
         if load_option.lower() not in ["y", "n"]:
             print("Invalid loading option. Use 'y' or 'n'.")
