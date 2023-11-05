@@ -14,7 +14,9 @@ class Card:
         Args:
             question: A string representing the question on the card.
             answer: A string representing the answer on the card.
+            box: An integer representing the box the card is in.
             created_date: A string representing the date the card was created.
+            last_failed_date: A string representing the date the card was last failed.
         Returns:
             None
         """
@@ -23,6 +25,7 @@ class Card:
         self.answer = answer
         self.box = 1
         self.created_date = created_date
+        self.last_failed_date = created_date
 
     def to_dict(self):
         """
@@ -37,6 +40,7 @@ class Card:
             "answer": self.answer,
             "box": self.box,
             "created_date": self.created_date,
+            "last_failed_date": self.last_failed_date,
         }
 
 
@@ -59,6 +63,7 @@ class LeitnerSystem:
         Add a card to box 1.
         Args:
             card: A Card object.
+            box: An integer representing the box to add the card to.
         Returns:
             None
         """
@@ -110,7 +115,9 @@ class LeitnerSystem:
             else:
                 print("Incorrect. The correct answer is", card.answer)
                 card.box = 1
+                card.created_date = datetime.now().date().strftime("%Y-%m-%d")
         self._update_boxes()
+        input("Press any key to continue...")
 
     def review_today(self):
         """
@@ -238,6 +245,13 @@ class LeitnerSystem:
                 print(f"\t{card.question}")
 
     def ask_for_loading(self):
+        """
+        Ask the user if they want to load from a file.
+        Args:
+            None
+        Returns:
+            A string representing whether to load from a file or not.
+        """
         load_option = input("Load from file? (y/n) ")
         while load_option.lower() not in ["n", "y"]:
             load_option = input("Load from file? (y/n) ")
