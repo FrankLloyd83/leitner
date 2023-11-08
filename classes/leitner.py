@@ -250,9 +250,13 @@ class LeitnerSystem:
                     card_data["box"],
                     card_data["created_date"],
                 )
-                if card_data["last_failed_date"]:
+                try:
                     card.last_failed_date = card_data["last_failed_date"]
-                else:
+                except KeyError:
+                    card.last_failed_date = card_data["created_date"]
+                try:
+                    card.last_failed_date = card_data["last_answered_date"]
+                except KeyError:
                     card.last_failed_date = card_data["created_date"]
                 self.boxes[int(box)].append(card)
                 self.cards.append(card)
