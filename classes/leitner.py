@@ -7,7 +7,11 @@ class Card:
     """A card in a Leitner box."""
 
     def __init__(
-        self, question, answer, created_date=datetime.now().date().strftime("%Y-%m-%d")
+        self,
+        question,
+        answer,
+        box=1,
+        created_date=datetime.now().date().strftime("%Y-%m-%d"),
     ):
         """
         Initialize the card.
@@ -23,9 +27,10 @@ class Card:
 
         self.question = question
         self.answer = answer
-        self.box = 1
+        self.box = box
         self.created_date = created_date
         self.last_failed_date = created_date
+        self.last_answered_date = created_date
 
     def to_dict(self):
         """
@@ -41,6 +46,7 @@ class Card:
             "box": self.box,
             "created_date": self.created_date,
             "last_failed_date": self.last_failed_date,
+            "last_answered_date": self.last_answered_date,
         }
 
 
@@ -79,6 +85,11 @@ class LeitnerSystem:
         Returns:
             None
         """
+        if self.new_cards_count >= 10:
+            input(
+                "You have already added 10 new cards today. Please wait tomorrow to add more. Press any key to continue..."
+            )
+            return
         add_card = input("Add card? (y/n) ")
         while add_card.lower() not in ["n", "y"]:
             add_card = input("Add card? (y/n) ")
@@ -109,13 +120,15 @@ class LeitnerSystem:
             user_answer = input("Your answer: ")
             if user_answer.lower() == card.answer.lower():
                 print("Correct!")
+                card.last_answered_date = datetime.now().date().strftime("%Y-%m-%d")
                 card.box += 1
                 if card.box > 7:
                     card.box = 7
             else:
                 print("Incorrect. The correct answer is", card.answer)
                 card.box = 1
-                card.created_date = datetime.now().date().strftime("%Y-%m-%d")
+                card.last_failed_date = datetime.now().date().strftime("%Y-%m-%d")
+                card.last_answered_date = datetime.now().date().strftime("%Y-%m-%d")
         self._update_boxes()
         input("Press any key to continue...")
 
@@ -132,9 +145,9 @@ class LeitnerSystem:
         review_cards = []
         for box in self.boxes.values():
             for card in box:
-                created_date = datetime.strptime(card.created_date, "%Y-%m-%d").date()
+                last_answered_date = datetime.strptime(card.last_answered_date, "%Y-%m-%d").date()
                 delay = self.delays[card.box]
-                review_date = created_date + timedelta(days=delay)
+                review_date = last_answered_date + timedelta(days=delay)
                 if review_date <= today:
                     review_cards.append(card)
         return review_cards
@@ -220,14 +233,27 @@ class LeitnerSystem:
 
         with open(self.file_path, "r") as f:
             data = json.load(f)
+        current_date = datetime.now().date().strftime("%Y-%m-%d")
+
+        self.new_cards_count = sum(
+            1
+            for card_data in data["boxes"].values()
+            for card in card_data
+            if card["created_date"] == str(current_date)
+        )
+
         for box in data["boxes"]:
             for card_data in data["boxes"][box]:
                 card = Card(
                     card_data["question"],
                     card_data["answer"],
+                    card_data["box"],
                     card_data["created_date"],
                 )
-                card.box = card_data["box"]
+                if card_data["last_failed_date"]:
+                    card.last_failed_date = card_data["last_failed_date"]
+                else:
+                    card.last_failed_date = card_data["created_date"]
                 self.boxes[int(box)].append(card)
                 self.cards.append(card)
 
