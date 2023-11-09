@@ -1,5 +1,6 @@
 import json
 import os
+import random
 from datetime import datetime, timedelta
 
 
@@ -79,10 +80,12 @@ class LeitnerSystem:
 
     def check_cards_count(self):
         if self.new_cards_count >= 10:
-            input("You have already added 10 new cards today. Please wait tomorrow to add more. Press any key to continue...")
+            input(
+                "You have already added 10 new cards today. Please wait tomorrow to add more. Press any key to continue..."
+            )
             return False
         return True
-    
+
     def write_cards(self):
         """
         Loop in order to add cards to the system.
@@ -122,7 +125,21 @@ class LeitnerSystem:
         if not review_cards:
             print("No cards to review today.")
             return
+
+        review_groups = {}
         for card in review_cards:
+            if card.box not in review_groups:
+                review_groups[card.box] = []
+            review_groups[card.box].append(card)
+
+        for box, cards in review_groups.items():
+            random.shuffle(cards)
+
+        sorted_cards_list = []
+        for box in sorted(review_groups.keys()):
+            sorted_cards_list.extend(review_groups[box])
+
+        for card in sorted_cards_list:
             print(f"Box {card.box}: {card.question}")
             user_answer = input("Your answer: ")
             if user_answer.lower() == card.answer.lower():
@@ -152,7 +169,9 @@ class LeitnerSystem:
         review_cards = []
         for box in self.boxes.values():
             for card in box:
-                last_answered_date = datetime.strptime(card.last_answered_date, "%Y-%m-%d").date()
+                last_answered_date = datetime.strptime(
+                    card.last_answered_date, "%Y-%m-%d"
+                ).date()
                 delay = self.delays[card.box]
                 review_date = last_answered_date + timedelta(days=delay)
                 if review_date <= today:
