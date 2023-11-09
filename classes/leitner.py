@@ -255,9 +255,9 @@ class LeitnerSystem:
                 except KeyError:
                     card.last_failed_date = card_data["created_date"]
                 try:
-                    card.last_failed_date = card_data["last_answered_date"]
+                    card.last_answered_date = card_data["last_answered_date"]
                 except KeyError:
-                    card.last_failed_date = card_data["created_date"]
+                    card.last_answered_date = card_data["created_date"]
                 self.boxes[int(box)].append(card)
                 self.cards.append(card)
 
