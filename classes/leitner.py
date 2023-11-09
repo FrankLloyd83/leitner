@@ -77,6 +77,12 @@ class LeitnerSystem:
         self.boxes[box].append(card)
         self.cards.append(card)
 
+    def check_cards_count(self):
+        if self.new_cards_count >= 10:
+            input("You have already added 10 new cards today. Please wait tomorrow to add more. Press any key to continue...")
+            return False
+        return True
+    
     def write_cards(self):
         """
         Loop in order to add cards to the system.
@@ -85,10 +91,7 @@ class LeitnerSystem:
         Returns:
             None
         """
-        if self.new_cards_count >= 10:
-            input(
-                "You have already added 10 new cards today. Please wait tomorrow to add more. Press any key to continue..."
-            )
+        if self.check_cards_count() == False:
             return
         add_card = input("Add card? (y/n) ")
         while add_card.lower() not in ["n", "y"]:
@@ -97,6 +100,10 @@ class LeitnerSystem:
             question = input("Question: ")
             answer = input("Answer: ")
             self.add_card(Card(question, answer))
+            self.new_cards_count += 1
+            print(self.new_cards_count, "new cards added today.")
+            if self.check_cards_count() == False:
+                return
             add_card = input("Add another card? (y/n) ")
             while add_card.lower() not in ["n", "y"]:
                 add_card = input("Add another card? (y/n) ")
