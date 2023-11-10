@@ -12,12 +12,7 @@ leitner = LeitnerSystem()
 
 # Load cards from file
 load_option = leitner.ask_for_loading()
-if load_option.lower() == "y":
-    leitner.load_from_file(load_option)
-else:
-    leitner.file_path = (
-        leitner.folder + input("Choose a name for your file: ") + leitner.extension
-    )
+leitner.load_from_file(load_option)
 
 # Display cards
 leitner.display()

@@ -64,6 +64,8 @@ class LeitnerSystem:
         self.cards = [card for box in self.boxes.values() for card in box]
         self.folder = "data/"
         self.extension = ".json"
+        self.new_cards_count = 0
+        self.file_path = None
 
     def add_card(self, card, box=1):
         """
@@ -204,10 +206,6 @@ class LeitnerSystem:
             None
         """
 
-        if load_option.lower() not in ["y", "n"]:
-            print("Invalid loading option. Use 'y' or 'n'.")
-            return
-
         file_list = os.listdir("data")
         combined_system = LeitnerSystem()
 
@@ -240,7 +238,7 @@ class LeitnerSystem:
         with open(filepath, "w") as f:
             json.dump(data, f)
 
-    def load_from_file(self, load_option, filepath=None):
+    def load_from_file(self, load_option):
         """
         Load the current state of the Leitner system from a file.
         Args:
@@ -250,42 +248,45 @@ class LeitnerSystem:
             None
         """
         if load_option == "y":
-            print("Choose a file from the following list:")
-            for file_name in os.listdir("data"):
-                print(file_name[:-5])
-            self.file_path = self.folder + input("File name: ") + self.extension
-        if filepath:
-            self.file_path = filepath
+            while self.file_path not in os.listdir("data"):
+                print("Choose a file from the following list:")
+                for file_name in os.listdir("data"):
+                    print(file_name[:-5])
+                self.file_path = self.folder + input("File name: ") + self.extension
+            with open(self.file_path, "r") as f:
+                data = json.load(f)
 
-        with open(self.file_path, "r") as f:
-            data = json.load(f)
-        current_date = datetime.now().date().strftime("%Y-%m-%d")
+            current_date = datetime.now().date().strftime("%Y-%m-%d")
 
-        self.new_cards_count = sum(
-            1
-            for card_data in data["boxes"].values()
-            for card in card_data
-            if card["created_date"] == str(current_date)
-        )
+            self.new_cards_count = sum(
+                1
+                for card_data in data["boxes"].values()
+                for card in card_data
+                if card["created_date"] == str(current_date)
+            )
 
-        for box in data["boxes"]:
-            for card_data in data["boxes"][box]:
-                card = Card(
-                    card_data["question"],
-                    card_data["answer"],
-                    card_data["box"],
-                    card_data["created_date"],
-                )
-                try:
-                    card.last_failed_date = card_data["last_failed_date"]
-                except KeyError:
-                    card.last_failed_date = card_data["created_date"]
-                try:
-                    card.last_answered_date = card_data["last_answered_date"]
-                except KeyError:
-                    card.last_answered_date = card_data["created_date"]
-                self.boxes[int(box)].append(card)
-                self.cards.append(card)
+            for box in data["boxes"]:
+                for card_data in data["boxes"][box]:
+                    card = Card(
+                        card_data["question"],
+                        card_data["answer"],
+                        card_data["box"],
+                        card_data["created_date"],
+                    )
+                    try:
+                        card.last_failed_date = card_data["last_failed_date"]
+                    except KeyError:
+                        card.last_failed_date = card_data["created_date"]
+                    try:
+                        card.last_answered_date = card_data["last_answered_date"]
+                    except KeyError:
+                        card.last_answered_date = card_data["created_date"]
+                    self.boxes[int(box)].append(card)
+                    self.cards.append(card)
+        elif load_option == "n":
+            self.file_path = (
+                self.folder + input("Choose a name for your file: ") + self.extension
+            )
 
     def display(self):
         """
