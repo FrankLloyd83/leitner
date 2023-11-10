@@ -66,6 +66,7 @@ class LeitnerSystem:
         self.extension = ".json"
         self.new_cards_count = 0
         self.file_path = None
+        self.file_name = None
 
     def add_card(self, card, box=1):
         """
@@ -248,11 +249,13 @@ class LeitnerSystem:
             None
         """
         if load_option == "y":
-            while self.file_path not in os.listdir("data"):
+            while self.file_name not in os.listdir("data"):
                 print("Choose a file from the following list:")
-                for file_name in os.listdir("data"):
-                    print(file_name[:-5])
-                self.file_path = self.folder + input("File name: ") + self.extension
+                for file in os.listdir("data"):
+                    print(file[:-5])
+                self.file_name = input("File name: ") + self.extension
+                self.file_path = self.folder + self.file_name
+                print(self.file_path, os.listdir("data"))
             with open(self.file_path, "r") as f:
                 data = json.load(f)
 
