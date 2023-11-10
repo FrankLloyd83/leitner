@@ -255,7 +255,6 @@ class LeitnerSystem:
                     print(file[:-5])
                 self.file_name = input("File name: ") + self.extension
                 self.file_path = self.folder + self.file_name
-                print(self.file_path, os.listdir("data"))
             with open(self.file_path, "r") as f:
                 data = json.load(f)
 
