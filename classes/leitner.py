@@ -84,7 +84,7 @@ class LeitnerSystem:
     def check_cards_count(self):
         if self.new_cards_count >= 10:
             input(
-                "You have already added 10 new cards today. Please wait tomorrow to add more. Press any key to continue..."
+                "You have already added 10 new cards today. Please wait tomorrow to add more. Press enter to continue..."
             )
             return False
         return True
@@ -127,6 +127,7 @@ class LeitnerSystem:
 
         if not review_cards:
             print("No cards to review today.")
+            input("Press enter to continue...")
             return
 
         review_groups = {}
@@ -157,7 +158,7 @@ class LeitnerSystem:
                 card.last_failed_date = datetime.now().date().strftime("%Y-%m-%d")
                 card.last_answered_date = datetime.now().date().strftime("%Y-%m-%d")
         self._update_boxes()
-        input("Press any key to continue...")
+        input("Press enter to continue...")
 
     def review_today(self):
         """
